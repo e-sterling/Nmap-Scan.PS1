@@ -3,9 +3,16 @@
     Runs a series of nmap scans against a list of IP addresses or subnets 
 
 .Description 
-    Ingests a list of host names, IP addresses and sub nets and launches nmap scans
+    Ingests a list of host names, IP addresses and/or sub nets and launches an nmap scan
     against each one in sequence. Can be fed multiple text files either through
-    FileInfo objects or on the pipe-line
+    FileInfo objects or on the pipeline. Output is sent to an XML file in the format of
+    [Host or subnet].xml in the current working dir. 
+
+    By default will use reasonable sane nmap arguments (-F -T3) but custom arguments
+    can be specified using the parameter -Arguments [args]
+
+    If the nmap executable is not accessible from the PATH variable an alternative
+    location can be specified using the parameter -Location [nmap location]
 
     TO-DO
     Add ability to feed in computer names from AD module
