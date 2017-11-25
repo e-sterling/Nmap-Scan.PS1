@@ -7,7 +7,7 @@ against each one in sequence. Can be fed multiple text files either through
 FileInfo objects or on the pipeline. Output is sent to an XML file in the format of
 \[Host or subnet].xml in the current working dir. 
 
-By default will use reasonable sane nmap arguments (-F -T3) but custom arguments
+By default will use reasonable sane nmap arguments (-sT -T3) but custom arguments
 can be specified using the parameter *-Arguments \[args]*
 
 If the nmap executable is not accessible from the PATH variable an alternative
@@ -20,7 +20,7 @@ Either 1) A string of host names/IP Addresses/Subnets OR
 
 **Arguments**
 Specifies the arguments that will be passed to nmap
-  Default: -F -T3
+  Default: -sT -T3
 
 **Location**
 The location of the nmap executable
@@ -37,7 +37,9 @@ The location of the nmap executable
     .\Nmap-Scan "scanme.nmap.org,192.168.0.1"
     Run nmap against a set of hosts and/or subnets
     
+    Get-ADComputer -Filter {Name -like "HostName"} | .\Nmap-Scan.PS1
+    Run nmap against objects returned by Get-ADComputer
+    
 ## TO-DO
-* Add ability to feed in computer names from AD module
 * Validate that host/subnet is valid before starting nmap
 * Ability to feed in CSV with additional metadata?
