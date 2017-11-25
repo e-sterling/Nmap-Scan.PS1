@@ -44,6 +44,10 @@
     .\Nmap-Scan "scanme.nmap.org,192.168.0.1"
     Run nmap against a set of hosts and/or subnets
 
+.Example
+    Get-ADComputer -Filter {Name -like "HostName"} | .\Nmap-Scan.PS1
+    Run nmap against objects returned by Get-ADComputer
+
 .Notes
 Written by: Ethan Sterling
 
@@ -89,7 +93,7 @@ param (
         $InputObject,
     [Alias ("ARG")]
     [Parameter()]
-        $Arguments = "-F -T3", # Set sane defaults for command string
+        $Arguments = "-sT -T3", # Set sane defaults for command string
     [Alias ("NMAP")]
     [Parameter()]
         $Location = "nmap" # In case nmap is not in PATH
@@ -115,17 +119,23 @@ BEGIN {
         PROCESS {
 
             $InputType = $InputObject.GetType().FullName
+            Write-Verbose "InputObject Type: $($InputType)"
             switch($InputType){
                 
                 "System.String" {
                     # Attempt to split comma-separated strings
                     $Targets = $InputObject.Replace(" ", "").Split(",")
-                    Write-Verbose "Targets from command line: $($Targets)"
+                    Write-Verbose "Target(s) from command line: $($Targets)"
                     }
                 "System.IO.FileInfo" {
                     # Read hosts from file into array
                     $Targets = Get-Content($InputObject.FullName)
-                    Write-Verbose "Targets from file $($InputObject.FullName): $($Targets)"
+                    Write-Verbose "Target(s) from file $($InputObject.FullName): $($Targets)"
+                    }
+                "Microsoft.ActiveDirectory.Management.ADComputer" {
+                    # Accept objects from AD modules
+                    $InputObject |%{$Targets += $_.DNSHostName}
+                    Write-Verbose "Target(s) from ADComputer object: $($Targets)"
                     }
                 } # END Switch
 
