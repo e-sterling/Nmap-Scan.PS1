@@ -25,7 +25,7 @@
 
 .Parameter Arguments
     Specifies the arguments that will be passed to nmap
-    Default: -F -T3
+    Default: -sT -T3
 
 .Parameter Location
     The location of the nmap executable
@@ -81,6 +81,7 @@ SOFTWARE.
 
 Change Log:
 V0.1 - 23/11/2017 - Initial version
+V0.2 - 25/11/2017 - Added handler for ADComputer objects
 
 #>
 
