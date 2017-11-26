@@ -48,11 +48,15 @@
     Get-ADComputer -Filter {Name -like "HostName"} | .\Nmap-Scan.PS1
     Run nmap against objects returned by Get-ADComputer
 
+.Example
+    "scanme.nmap.org,10.2.1.0" | .\Nmap-Scan -Location "C:\nmap\nmap.exe"
+    Define the location of the nmap executable if it isn't available in PATH
+
 .Notes
 Written by: Ethan Sterling
 
 Find me on:
-* Twitter  : http://twitter.com/esterling_
+* Twitter  : https://twitter.com/esterling_
 * Medium   : https://medium.com/@esterling_
 
 License:
@@ -82,6 +86,8 @@ SOFTWARE.
 Change Log:
 V0.1 - 23/11/2017 - Initial version
 V0.2 - 25/11/2017 - Added handler for ADComputer objects
+v0.3 - 26/11/2017 - Change handling of input to make it more robust, support passing of 
+                    arrays of different data types into script
 
 #>
 
@@ -104,6 +110,36 @@ BEGIN {
     # Get current date/time
     $ScriptStart = Get-Date
 
+    # Define function to cporrectly handle input object depending on object type
+    function Process-Input($In) {
+
+        # Get ObjectType of input
+        $InputType = $In.GetType().FullName
+        Write-Verbose "Object Type: $($InputType)"
+
+        switch($InputType){
+                
+            "System.String" {
+                # Attempt to split comma-separated strIngs
+                $Out = $In.Replace(" ", "").Split(",")
+                Write-Verbose "Target(s) from command lIne: $($Out)"
+                }
+            "System.IO.FileInfo" {
+                # Read hosts from file Into array
+                $Out = Get-Content($In.FullName)
+                Write-Verbose "Target(s) from file $($In.FullName): $($Out)"
+                }
+            "Microsoft.ActiveDirectory.Management.ADComputer" {
+                # Accept objects from AD modules
+                $In |%{$Out += $_.DNSHostName}
+                Write-Verbose "Target(s) from ADComputer object: $($Out)"
+                }
+            } # END Switch
+
+        Return $Out
+
+    } # END Fucntion Process-Input
+
     # Define main function
     function Nmap-Scan {
     
@@ -118,27 +154,17 @@ BEGIN {
         } #END BEGIN
     
         PROCESS {
+            
+            # Initialise target array
+            $Targets = @()
 
-            $InputType = $InputObject.GetType().FullName
-            Write-Verbose "InputObject Type: $($InputType)"
-            switch($InputType){
-                
-                "System.String" {
-                    # Attempt to split comma-separated strings
-                    $Targets = $InputObject.Replace(" ", "").Split(",")
-                    Write-Verbose "Target(s) from command line: $($Targets)"
-                    }
-                "System.IO.FileInfo" {
-                    # Read hosts from file into array
-                    $Targets = Get-Content($InputObject.FullName)
-                    Write-Verbose "Target(s) from file $($InputObject.FullName): $($Targets)"
-                    }
-                "Microsoft.ActiveDirectory.Management.ADComputer" {
-                    # Accept objects from AD modules
-                    $InputObject |%{$Targets += $_.DNSHostName}
-                    Write-Verbose "Target(s) from ADComputer object: $($Targets)"
-                    }
-                } # END Switch
+            # Check if input is a generic array or single object and pass to ProcessInput function
+            if($InputObject.GetType().FullName -eq "System.Object[]") {
+                $InputObject |% {$Targets += Process-Input $_}
+                }
+            else {
+                $Targets = Process-Input $InputObject
+            }
 
             foreach ($Target in $Targets) {
 
@@ -170,7 +196,7 @@ BEGIN {
             Write-Verbose "Processing completed"
         }
 
-    }
+    } # END Function Nmap-Scan
 
 }
 
@@ -181,4 +207,4 @@ END {
     $ScriptEnd = Get-Date
     $TimeTaken =  $ScriptEnd - $ScriptStart 
     Write-Verbose "Script completed in $($TimeTaken.Minutes) minutes and $($TimeTaken.Seconds) seconds"
-}
+} 
