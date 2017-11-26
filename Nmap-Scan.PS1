@@ -27,9 +27,13 @@
     Specifies the arguments that will be passed to nmap
     Default: -sT -T3
 
+.Parameter OutDir
+    Specifies the directory nmap should output XML files to
+    Default: Current working directory
+
 .Parameter Location
     The location of the nmap executable
-    Defaults to "nmap" (assumes nmap directory is in the PATH)
+    Default: nmap.exe (assumes nmap directory is in the PATH)
 
 .Example 
     dir *.txt | .\Nmap-Scan
@@ -39,6 +43,10 @@
 .Example
     .\Nmap-Scan 10.0.0.0/24 -Arguments "-T5 -A -sC -sS"
     Run nmap against a subnet with custom arguments
+
+.Example
+    .\Nmap-Scan 192.168.1.1 -Arguments "-p 445 --script smb-vuln-ms17-010" -OutDir "2017-11-26"
+    Check host 192.168.1.1 for vulnerability to EternalBlue and output XML to dated directory
 
 .Example
     .\Nmap-Scan "scanme.nmap.org,192.168.0.1"
@@ -87,7 +95,9 @@ Change Log:
 V0.1 - 23/11/2017 - Initial version
 V0.2 - 25/11/2017 - Added handler for ADComputer objects
 v0.3 - 26/11/2017 - Change handling of input to make it more robust, support passing of 
-                    arrays of different data types into script
+                      arrays of different data types into script
+                    Add ability to output XML files to specific directory using parameter
+                      -OutDir (ex. -OutDir "C:\NmapResults\2017-11-26")
 
 #>
 
@@ -103,14 +113,25 @@ param (
         $Arguments = "-sT -T3", # Set sane defaults for command string
     [Alias ("NMAP")]
     [Parameter()]
-        $Location = "nmap" # In case nmap is not in PATH
+        $Location = "nmap", # In case nmap is not in PATH
+    [Alias ("OUT")]
+    [Parameter()]
+        $OutDir = $pwd # Specify the directory nmap should output XML files to
     )
 
 BEGIN {
     # Get current date/time
     $ScriptStart = Get-Date
 
-    # Define function to cporrectly handle input object depending on object type
+    # Check if selected output folder exists, create if required
+    if(-not(Resolve-Path $OutDir -ErrorAction SilentlyContinue -ErrorVariable _rperror)){
+        Write-Verbose "OutDir $($outdir) not found, creating..."
+        mkdir $_rperror[0].TargetObject | out-null
+    }
+    $OutDir = Resolve-Path $OutDir
+    Write-Verbose "Set output directory to $($OutDir)"
+
+    # Define function to correctly handle input object depending on object type
     function Process-Input($In) {
 
         # Get ObjectType of input
@@ -172,7 +193,7 @@ BEGIN {
                 if($Target -ne "") {
                     
                     # Remove "/" from output file name in order to not break
-                    $OutputFile = "$($Target.Replace("/", "-")).xml"
+                    $OutputFile = "$($OutDir)\$($Target.Replace("/", "-")).xml"
 
                     # Construct command line for nmap                    
                     $FullCommand = "$($Arguments) -oX $OutputFile $($Target)"
@@ -186,7 +207,12 @@ BEGIN {
 
                     # Once scan completes, check for existence of output file 
                     Write-Output "$($Target): Scan completed ($OutputFile)"
-                    if(Test-Path $OutputFile) {Write-Verbose "Output file $($OutputFile) saved successfully"}else{Write-Verbose "Output file $($OutputFile) not found!"}
+                    if(Test-Path $OutputFile) {
+                        Write-Verbose "Output file $($OutputFile) saved successfully"
+                        }
+                    else {
+                        Write-Verbose "Output file $($OutputFile) not found!"
+                        }
                     }
             } # END ForEach
         } # END PROCESS

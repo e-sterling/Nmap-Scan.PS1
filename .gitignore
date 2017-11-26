@@ -1,0 +1,6 @@
+
+# Ignore XML files output during testing
+*.xml
+
+# Ignore TXT files using during testing
+*..txt
