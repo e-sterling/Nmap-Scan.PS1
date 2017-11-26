@@ -3,4 +3,4 @@
 *.xml
 
 # Ignore TXT files using during testing
-*..txt
+*.txt

@@ -43,6 +43,9 @@ The location of the nmap executable
 
     "scanme.nmap.org,10.2.1.0" | .\Nmap-Scan -Location "C:\nmap\nmap.exe"
     Define the location of the nmap executable if it isn't available in PATH
+
+    .\Nmap-Scan 192.168.1.1 -Arguments "-p 445 --script smb-vuln-ms17-010" -OutDir "2017-11-26"
+    Check host 192.168.1.1 for vulnerability to EternalBlue and output XML to dated directory
     
 ## TO-DO
 * Validate that host/subnet is valid before starting nmap
