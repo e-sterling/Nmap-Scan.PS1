@@ -16,7 +16,8 @@ location can be specified using the parameter *-Location \[nmap location]*
 ## Parameters
 **InputObject**
 Either 1) A string of host names/IP Addresses/Subnets OR
-  2) One or more FileInfo objects representing text files
+  2) One or more FileInfo objects representing text files OR
+  3) One or more ADComputer objects (Get-ADComputer)
 
 **Arguments**
 Specifies the arguments that will be passed to nmap
@@ -39,6 +40,9 @@ The location of the nmap executable
     
     Get-ADComputer -Filter {Name -like "HostName"} | .\Nmap-Scan.PS1
     Run nmap against objects returned by Get-ADComputer
+
+    "scanme.nmap.org,10.2.1.0" | .\Nmap-Scan -Location "C:\nmap\nmap.exe"
+    Define the location of the nmap executable if it isn't available in PATH
     
 ## TO-DO
 * Validate that host/subnet is valid before starting nmap
