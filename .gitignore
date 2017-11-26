@@ -4,3 +4,4 @@
 
 # Ignore TXT files using during testing
 *.txt
+*.csv

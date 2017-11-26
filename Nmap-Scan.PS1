@@ -35,10 +35,24 @@
     The location of the nmap executable
     Default: nmap.exe (assumes nmap directory is in the PATH)
 
+.Parameter CSV
+    Specifies the name of the column in the CSV that contains the target
+    Default: Not set, setting this parameter will cause #any text file# to
+             be processed as a CSV file
+
 .Example 
     dir *.txt | .\Nmap-Scan
     Get an object containing text files in working directory, read files
     and run nmap against each host specified in each file (one per line)
+
+.Example
+    dir *.csv | .\Nmap-Scan -CSV Target
+    Get an object containing text files in working directory,
+    uses the column "Target" to create list of hosts
+        Target, HostName
+        8.8.8.8, "Google DNS"
+        scanme.nmap.org,"Scan Me"
+        192.168.1.1, "My Router"
 
 .Example
     .\Nmap-Scan 10.0.0.0/24 -Arguments "-T5 -A -sC -sS"
@@ -110,13 +124,15 @@ param (
         $InputObject,
     [Alias ("ARG")]
     [Parameter()]
-        $Arguments = "-sT -T3", # Set sane defaults for command string
+        [string]$Arguments = "-sT -T3", # Set sane defaults for command string
     [Alias ("NMAP")]
     [Parameter()]
-        $Location = "nmap", # In case nmap is not in PATH
+        [string]$Location = "nmap", # In case nmap is not in PATH
     [Alias ("OUT")]
     [Parameter()]
-        $OutDir = $pwd # Specify the directory nmap should output XML files to
+        [string]$OutDir = $pwd, # Specify the directory nmap should output XML files to
+    [Parameter()]
+        [string]$CSV # Specify the directory nmap should output XML files to
     )
 
 BEGIN {
@@ -138,6 +154,8 @@ BEGIN {
         $InputType = $In.GetType().FullName
         Write-Verbose "Object Type: $($InputType)"
 
+        $out = @()
+
         switch($InputType){
                 
             "System.String" {
@@ -147,8 +165,15 @@ BEGIN {
                 }
             "System.IO.FileInfo" {
                 # Read hosts from file Into array
-                $Out = Get-Content($In.FullName)
-                Write-Verbose "Target(s) from file $($In.FullName): $($Out)"
+                if($CSV.Length -gt 0){
+                    Import-CSV $in.FullName |%{
+                        $out += $_.($CSV)
+                    }
+                }
+                else {
+                    $Out = Get-Content($In.FullName)
+                    Write-Verbose "Target(s) from file $($In.FullName): $($Out)"
+                    }
                 }
             "Microsoft.ActiveDirectory.Management.ADComputer" {
                 # Accept objects from AD modules
