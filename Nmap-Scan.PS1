@@ -40,6 +40,31 @@
     Default: Not set, setting this parameter will cause #any text file# to
              be processed as a CSV file
 
+.Inputs
+    System.String
+        You can pipe a string containing a host, or a coimma-separated
+        list of hosts
+
+    System.IO.FileInfo
+        You can pipe in System.IO.FileInfo object(s) provided by cmdlets
+        like Get-ChildItem
+
+    Microsoft.ActiveDirectory.Management.ADComputer
+        You can pipe in object(s) returned from the Get-ADComputer Active
+        Directory cmdlet
+
+.Outputs
+    System.Object[]
+        This script returns a PSObject with the following properties:
+            Target - The target of the nmap scan
+            Arguments - The command line args passed to nmap
+            StartTime - The start time of the scan
+            FinishTime - The end time of the scan
+            Duration - The duration of the scan
+            OutFile - The location of the XML file output by nmap
+            Hash - The SHA254 hash of the OutFile
+
+
 .Example 
     dir *.txt | .\Nmap-Scan
     Get an object containing text files in working directory, read files
@@ -119,16 +144,12 @@ v0.3 - 26/11/2017 - Change handling of input to make it more robust, support pas
 
 [CmdletBinding(SupportsShouldProcess=$True)]
 param (
-    [Alias ("I","IN")]
     [Parameter(Mandatory=$True,ValueFromPipeline=$True,ValueFromPipelinebyPropertyName=$True)]
         $InputObject,
-    [Alias ("ARG")]
     [Parameter()]
         [string]$Arguments = "-sT -T3", # Set sane defaults for command string
-    [Alias ("NMAP")]
     [Parameter()]
         [string]$Location = "nmap", # In case nmap is not in PATH
-    [Alias ("OUT")]
     [Parameter()]
         [string]$OutDir = $pwd, # Specify the directory nmap should output XML files to
     [Parameter()]
@@ -252,8 +273,9 @@ BEGIN {
                     else {
                         Write-Verbose "Output file $($OutputFile) not found!"
                         }
+                    # Send $OutputObject to pipeline
+                    $OutputObject
                     }
-            $OutputObject
             } # END ForEach
         } # END PROCESS
     
