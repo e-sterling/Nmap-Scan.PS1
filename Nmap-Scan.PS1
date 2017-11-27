@@ -217,28 +217,43 @@ BEGIN {
                 # Confirm that target is not empty
                 if($Target -ne "") {
                     
+                    # Initialise Output Object
+                    $OutputObject = New-Object psobject -Property @{
+                        Target = $Target;
+                        Arguments = $Arguments;
+                        StartTime = Get-Date;
+                        FinishTime = $NULL;
+                        Duration = $NULL;
+                        OutFile = $NULL;
+                        Hash = $NULL
+                    }
+
                     # Remove "/" from output file name in order to not break
                     $OutputFile = "$($OutDir)\$($Target.Replace("/", "-")).xml"
+                    $OutputObject.OutFile = $OutputFile
 
                     # Construct command line for nmap                    
                     $FullCommand = "$($Arguments) -oX $OutputFile $($Target)"
-                    Write-Verbose "Running command: $($Location) $($FullCommand)"
 
                     # Start nmap scan
-                    Write-Output "$($Target): Starting scan"
-                    if ($PSCmdlet.ShouldProcess($Target,"nmap $($Arguments)")) {
+                    Write-Verbose "Scan started at $($OutputObject.StartTime)"
+                    if ($PSCmdlet.ShouldProcess($Target,"$($Location) $($Arguments)")) {
                         Start-Process $Location -ArgumentList $FullCommand -Wait
                         }
+                    $OutputObject.FinishTime = Get-Date
+                    Write-Verbose "Scan completed at $($OutputObject.FinishTime)"
+                    $OutputObject.Duration = $OutputObject.FinishTime - $OutputObject.StartTime
 
                     # Once scan completes, check for existence of output file 
-                    Write-Output "$($Target): Scan completed ($OutputFile)"
                     if(Test-Path $OutputFile) {
                         Write-Verbose "Output file $($OutputFile) saved successfully"
+                        $OutputObject.Hash = (Get-FileHash -Algorithm SHA256 $OutputFile).Hash
                         }
                     else {
                         Write-Verbose "Output file $($OutputFile) not found!"
                         }
                     }
+            $OutputObject
             } # END ForEach
         } # END PROCESS
     
