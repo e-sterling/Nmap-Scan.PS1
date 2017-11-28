@@ -153,7 +153,7 @@ param (
     [Parameter()]
         [string]$OutDir = $pwd, # Specify the directory nmap should output XML files to
     [Parameter()]
-        [string]$CSV # Specify the directory nmap should output XML files to
+        [string]$CSV # Specify that imported text files are CSVs and specify which column to use as targets
     )
 
 BEGIN {
