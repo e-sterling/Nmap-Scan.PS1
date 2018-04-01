@@ -37,7 +37,7 @@ Specifies the arguments that will be passed to nmap
 
 **Location**
 The location of the nmap executable
-  Defaults to "nmap" (assumes nmap directory is in the PATH)
+  Defaults to "nmap" (assumes nmap directory is in the $PATH)
 
 ## Examples
     dir *.txt | .\Nmap-Scan
